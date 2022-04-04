@@ -18,14 +18,15 @@ const CreateForm = ({ updateMessage }) => {
   const [status, setStatus] = useState("");
   const [messages, addMessage] = useMessages();
 
-
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
         if (!stripe || !elements) {
           return;
         }
-            addMessage("Creating Customer.....");
+    
+    addMessage("Creating Customer.....");
 
     const { customer } = await fetch("/create-customer", {
       method: "POST",

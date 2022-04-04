@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router-dom";
-
 import { useElements, useStripe } from "@stripe/react-stripe-js";
 import StatusMessages, { useMessages } from "./StatusMessages";
+import { CardElement } from "@stripe/react-stripe-js";
 
 import "./Form.css";
+import { Card } from "material-ui";
 
 const Form = () => {
   const stripe = useStripe();
   const elements = useElements();
 
-  const [name, setName] = useState("Michael Test");
-  const [email, setEmail] = useState("michael@test.com");
+  const [messages, addMessage] = useMessages();
+  const [name, setName] = useState("Robert Hinson");
+  const [email, setEmail] = useState("Robert@test.com");
   const [description, setDescription] = useState("April 3");
   const [amount, setAmount] = useState(300);
   const [number, setNumber] = useState(4242424242424242);
@@ -81,41 +83,74 @@ const Form = () => {
   //  6. Provision your service
   //  7. Take into account SCA/3DS and handle authentication [2]
 
-  const handleSubmit = () => {
-    alert(inputField);
-  };
+  const handleSubmit = async (e) => {
+   e.preventDefault();
+   if(!stripe || !elements) {
+     return;
+   }
+   addMessage('Creating payment Intent.')
 
+   //Create payment intent on the server
+   const { clientSecret } = await fetch("/create-payment-intent", {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+     },
+     body: JSON.stringify({
+       paymentMethodType: 'card',
+       currency: 'usd'
 
+     }),
+   }).then((r) => r.json());
+
+    addMessage("Payment Intent created.");
+
+    //Confirm the payment on the client
+    const {paymentIntent} = await stripe.confirmCardPayment(
+      clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+        }
+      }
+    )
+    addMessage(`PaymentIntent (${paymentIntent.id}): ${paymentIntent.status}`)
+  }
+
+  
 
   return (
     <div className="main">
       <div>
         <div className="p-row">
-           <div className="p-row">
-          <label>
-            plan 1
-            <button
-              id="p-one"
-              name="amount"
-              value={300}
-              onClick={handleAmount}
-              className="p-box"
-            >
-              $8.00/mo
-            </button>
-          </label>
-          <label>
-            plan 2
-            <button
-              id="p-two"
-              name="amount"
-              value={800}
-              onClick={handleAmount}
-              className="p-box"
-            >
-              $3.00/mo
-            </button>
-          </label>
+          <div className="half">
+            <h4>stripe listen --forward-to localhost:4242/webhook</h4>
+            <h4>ngrok http 3000 --host-header=rewrite</h4>
+          </div>
+          <div className="half">
+            <label>
+              plan 1
+              <button
+                id="p-one"
+                name="amount"
+                value={300}
+                onClick={handleAmount}
+                className="p-box"
+              >
+                $8.00/mo
+              </button>
+            </label>
+            <label>
+              plan 2
+              <button
+                id="p-two"
+                name="amount"
+                value={800}
+                onClick={handleAmount}
+                className="p-box"
+              >
+                $3.00/mo
+              </button>
+            </label>
           </div>
         </div>
         <div className="p-row">
@@ -142,7 +177,7 @@ const Form = () => {
                 required
               />
             </label>
-            <label>
+            {/* <label>
               number
               <input
                 label="number"
@@ -152,10 +187,16 @@ const Form = () => {
                 value={number}
                 required
               />
-            </label>
+            </label> */}
           </div>
           <div className="half">
-            <label>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="card-element">Card</label>
+              <h4>4242424242424242</h4>
+              <CardElement id="card-element" />
+              <button className="pay-button">Pay</button>
+            </form>
+            {/* <label>
               exp_month
               <input
                 label="exp_month"
@@ -176,8 +217,8 @@ const Form = () => {
                 value={exp_year}
                 required
               />
-            </label>
-            <label>
+            </label> */}
+            {/* <label>
               cvc
               <input
                 label="cvc"
@@ -187,14 +228,16 @@ const Form = () => {
                 value={cvc}
                 required
               />
-            </label>
+            </label> */}
           </div>
-          <button id="submit-button" onclick={handleSubmit}>Submit</button>
-          
+          {/* <button id="submit-button" onClick={handleSubmit}>
+            Submit
+          </button> */}
         </div>
       </div>
       <div className="row">
         <div className="p-console">
+          <StatusMessages messages={messages} />
           <pre>
             <li className="customer">name: {JSON.stringify(name)}</li>
             <li className="customer">email: {JSON.stringify(email)}</li>
@@ -208,6 +251,7 @@ const Form = () => {
             <li className="card">exp_month: {JSON.stringify(exp_month)}</li>
             <li className="card">exp_year: {JSON.stringify(exp_year)}</li>
             <li className="card">cvc: {JSON.stringify(cvc)}</li>
+            <li className="product">customer: {JSON.stringify(customer)}</li>
           </pre>
         </div>
       </div>

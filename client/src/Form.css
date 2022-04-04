@@ -148,11 +148,19 @@ fieldset, input, select {
 }
 
 .p-box {
+  margin-top: 10px;
+  padding: 25px;
+  padding-bottom: 40px;
   height: 50%;
 }
 
 #submit-button {
   margin-top: none !important;
   background-color: green;
+}
+
+.pay-button {
+  padding: 8px;
+  width: 90px;
 }
 
