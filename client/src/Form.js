@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router-dom";
 import { useElements, useStripe } from "@stripe/react-stripe-js";
 import StatusMessages, { useMessages } from "./StatusMessages";
-import { CardElement } from "@stripe/react-stripe-js";
+import { CardElement, PaymentRequestButtonElement } from "@stripe/react-stripe-js";
 
 import "./Form.css";
 import { Card } from "material-ui";
@@ -12,8 +12,8 @@ const Form = () => {
   const elements = useElements();
 
   const [messages, addMessage] = useMessages();
-  const [name, setName] = useState("Robert Hinson");
-  const [email, setEmail] = useState("Robert@test.com");
+  const [name, setName] = useState("Fig Moi");
+  const [email, setEmail] = useState("fig@test.com");
   const [description, setDescription] = useState("April 3");
   const [amount, setAmount] = useState(300);
   const [number, setNumber] = useState(4242424242424242);
@@ -22,6 +22,8 @@ const Form = () => {
   const [cvc, setCvc] = useState(444);
 
   const [customer, setCustomer] = useState({});
+  const [paymentRequest, setPaymentRequest] = useState(null);
+
 
   const handleName = (e) => {
     setName(e.target.value);
@@ -74,6 +76,69 @@ const Form = () => {
     customer: customer,
   });
 
+  useEffect(() => {
+    if (!stripe || !elements) {
+      return;
+    }
+    const pr = stripe.paymentRequest({
+      currency: "usd",
+      country: "US",
+      requestPayerEmail: true,
+      requestPayerName: true,
+      total: {
+        label: "Demo payment",
+        amount: amount,
+      },
+    });
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        //show some button on the page
+        setPaymentRequest(pr);
+      }
+    });
+
+    pr.on("paymentmethod", async (e) => {
+      const { error: backendError, clientSecret } = await fetch(
+        "/create-payment-intent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            paymentMethodType: "card",
+            currency: "usd",
+          }),
+        }
+      ).then((r) => r.json());
+
+      if (backendError) {
+        addMessage(backendError.message);
+        return;
+      }
+
+      addMessage("Client secret returned");
+
+      const { error: stripeError, paymentIntent } =
+        await stripe.confirmCardPayment(
+          clientSecret,
+          {
+            payment_method: e.paymentMethod.id,
+          },
+          { handleActions: false }
+        );
+
+      if (stripeError) {
+        // Show error to customer (e.g., insufficient funds)
+        addMessage(stripeError.message);
+        return;
+      }
+
+      // Show a success message to customer
+      addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
+    });
+  }, [stripe, elements, addMessage]);
+
   //  0. Init Git
   //  1. Create a customer
   //  2. Collect the payment information securely using Stripe.js
@@ -116,17 +181,38 @@ const Form = () => {
     addMessage(`PaymentIntent (${paymentIntent.id}): ${paymentIntent.status}`)
   }
 
+   const handleCustomer = async (e) => {
+
+     const {} = await fetch("/payment-sheet", {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify({
+         paymentMethodType: "card",
+         currency: "usd",
+         name: name,
+         email: email,
+         description: description,
+         amount: amount,
+         number: number,
+         exp_month: exp_month,
+         exp_year: exp_year,
+         cvc: cvc,
+       }),
+     }).then((r) => r.json());
+   }
   
 
   return (
     <div className="main">
       <div>
         <div className="p-row">
-          <div className="half">
+          <div className="s-half">
             <h4>stripe listen --forward-to localhost:4242/webhook</h4>
             <h4>ngrok http 3000 --host-header=rewrite</h4>
           </div>
-          <div className="half">
+          <div className="s-half">
             <label>
               plan 1
               <button
@@ -134,7 +220,7 @@ const Form = () => {
                 name="amount"
                 value={300}
                 onClick={handleAmount}
-                className="p-box"
+                className="s-box"
               >
                 $8.00/mo
               </button>
@@ -146,7 +232,7 @@ const Form = () => {
                 name="amount"
                 value={800}
                 onClick={handleAmount}
-                className="p-box"
+                className="s-box"
               >
                 $3.00/mo
               </button>
@@ -177,7 +263,24 @@ const Form = () => {
                 required
               />
             </label>
-            {/* <label>
+            <button onClick={handleCustomer} className="pay-button">
+              Create Customer
+            </button>
+
+          </div>
+          <div className="half">
+            {/* <form onSubmit={handleSubmit}>
+              <label htmlFor="card-element">Card</label>
+              <h4>4242424242424242</h4> */}
+            {/* <CardElement id="card-element" /> */}
+            {/* <div> */}
+            {/* {paymentRequest && (
+                <PaymentRequestButtonElement options={{ paymentRequest }} />
+              )} */}
+            {/* </div> */}
+            {/* <button className="pay-button">Pay</button> */}
+            {/* </form> */}
+            <label>
               number
               <input
                 label="number"
@@ -187,16 +290,8 @@ const Form = () => {
                 value={number}
                 required
               />
-            </label> */}
-          </div>
-          <div className="half">
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="card-element">Card</label>
-              <h4>4242424242424242</h4>
-              <CardElement id="card-element" />
-              <button className="pay-button">Pay</button>
-            </form>
-            {/* <label>
+            </label>
+            <label>
               exp_month
               <input
                 label="exp_month"
@@ -217,8 +312,8 @@ const Form = () => {
                 value={exp_year}
                 required
               />
-            </label> */}
-            {/* <label>
+            </label>
+            <label>
               cvc
               <input
                 label="cvc"
@@ -228,11 +323,11 @@ const Form = () => {
                 value={cvc}
                 required
               />
-            </label> */}
+            </label>
           </div>
-          {/* <button id="submit-button" onClick={handleSubmit}>
+          <button id="submit-button" onClick={handleSubmit}>
             Submit
-          </button> */}
+          </button>
         </div>
       </div>
       <div className="row">

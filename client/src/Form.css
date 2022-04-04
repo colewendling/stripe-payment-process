@@ -164,3 +164,11 @@ fieldset, input, select {
   width: 90px;
 }
 
+.s-half {
+  height: 138px;
+}
+
+.s-box {
+  padding: 10px;
+}
+
