@@ -63,6 +63,10 @@ const Form = () => {
     const value = Math.floor(e.target.value);
     setCvc(value);
   };
+    const handleCustomerObject = (data) => {
+      const customerObject = data;
+      setCustomer(data);
+    };
 
   const [inputField, setInputField] = useState({
     name: name,
@@ -183,7 +187,7 @@ const Form = () => {
 
    const handleCustomer = async (e) => {
 
-     const {} = await fetch("/payment-sheet", {
+     const {customerObject} = await fetch("/payment-sheet", {
        method: "POST",
        headers: {
          "Content-Type": "application/json",
@@ -201,6 +205,8 @@ const Form = () => {
          cvc: cvc,
        }),
      }).then((r) => r.json());
+     console.log(customerObject)
+     handleCustomerObject(customerObject.id)
    }
   
 
@@ -266,7 +272,6 @@ const Form = () => {
             <button onClick={handleCustomer} className="pay-button">
               Create Customer
             </button>
-
           </div>
           <div className="half">
             {/* <form onSubmit={handleSubmit}>
@@ -274,10 +279,13 @@ const Form = () => {
               <h4>4242424242424242</h4> */}
             {/* <CardElement id="card-element" /> */}
             {/* <div> */}
-            {/* {paymentRequest && (
-                <PaymentRequestButtonElement options={{ paymentRequest }} />
-              )} */}
-            {/* </div> */}
+            {paymentRequest && (
+              <PaymentRequestButtonElement
+               
+                options={{ paymentRequest }}
+              />
+            )}
+            {/* </div>
             {/* <button className="pay-button">Pay</button> */}
             {/* </form> */}
             <label>

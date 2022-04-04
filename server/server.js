@@ -91,7 +91,7 @@ app.post("/payment-sheet", async (req, res) => {
   res.json({
     setupIntent: setupIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
-    customer: customer.id,
+    customerObject: customer,
     publishableKey:
       "pk_test_51KiQMsI3oyKP8eORrA6f2aREXVZJo16HxStTPqzcZ4TjVgZCRE6VbmMJyQNHv14XKaTRa6orZkRUB4Oxbju76ofP00qt8z5S9T",
   });
@@ -171,6 +171,12 @@ app.post(
         `✅ [${event.id}] PaymentIntent:(${paymentIntent.id}) Status:${paymentIntent.status}`
       );
     }
+        if (event.type === "customer.created") {
+          const customer = event.data.object;
+          console.log(
+            `✅ [${event.id}] Customer:(${customer.id}) Created with default_source: (${customer.default_source})`
+          );
+        }
     if (event.type === "payment_intent.requires_action") {
       const paymentIntent = event.data.object;
       console.log(
