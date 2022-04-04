@@ -12,9 +12,9 @@ const Form = () => {
   const elements = useElements();
 
   const [messages, addMessage] = useMessages();
-  const [name, setName] = useState("Fig Moi");
-  const [email, setEmail] = useState("fig@test.com");
-  const [description, setDescription] = useState("April 3");
+  const [name, setName] = useState("Apple Mouse");
+  const [email, setEmail] = useState("Apple@mouse.com");
+  const [description, setDescription] = useState("April 4");
   const [amount, setAmount] = useState(300);
   const [number, setNumber] = useState(4242424242424242);
   const [exp_month, setExpMonth] = useState(12);
@@ -123,22 +123,19 @@ const Form = () => {
 
       addMessage("Client secret returned");
 
-      const { error: stripeError, paymentIntent } =
-        await stripe.confirmCardPayment(
-          clientSecret,
-          {
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment( clientSecret, {
             payment_method: e.paymentMethod.id,
-          },
-          { handleActions: false }
-        );
+          }, { handleActions: false });
 
       if (stripeError) {
         // Show error to customer (e.g., insufficient funds)
+        e.complete('fail');
         addMessage(stripeError.message);
         return;
       }
 
       // Show a success message to customer
+      e.complete('success');
       addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
     });
   }, [stripe, elements, addMessage]);
@@ -281,7 +278,7 @@ const Form = () => {
             {/* <div> */}
             {paymentRequest && (
               <PaymentRequestButtonElement
-               
+                onClick={handleCustomer}
                 options={{ paymentRequest }}
               />
             )}
@@ -333,9 +330,9 @@ const Form = () => {
               />
             </label>
           </div>
-          <button id="submit-button" onClick={handleSubmit}>
+          {/* <button id="submit-button" onClick={handleSubmit}>
             Submit
-          </button>
+          </button> */}
         </div>
       </div>
       <div className="row">

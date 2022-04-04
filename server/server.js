@@ -55,6 +55,7 @@ app.post("/payment-sheet", async (req, res) => {
 
   const token = await stripe.tokens.create({
     card: {
+      name: name,
       number: number,
       exp_month: exp_month,
       exp_year: exp_year,
