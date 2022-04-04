@@ -21,9 +21,22 @@ const Form = () => {
   const [exp_year, setExpYear] = useState(2024);
   const [cvc, setCvc] = useState(444);
 
-  const [customer, setCustomer] = useState({});
   const [paymentRequest, setPaymentRequest] = useState(null);
+  
+  const [paymentIntent, setPaymentIntent] = useState({});
+  const [paymentMethod, setPaymentMethod] = useState({});
+  const [customer, setCustomer] = useState({});
+  
 
+    const handlePaymentIntent = (data) => {
+      setPaymentIntent(data);
+    };
+    
+     const handlePaymentMethod = (data) => {
+       setPaymentMethod(data);
+     };
+
+  
 
   const handleName = (e) => {
     setName(e.target.value);
@@ -36,7 +49,7 @@ const Form = () => {
   };
   const handleAmount = (e) => {
     e.preventDefault();
-    setAmount(e.target.value);
+    setAmount(Math.floor(e.target.value));
 
     const activeId = e.target.id;
     const unactiveId = activeId === "p-one" ? "p-two" : "p-one";
@@ -84,6 +97,7 @@ const Form = () => {
     if (!stripe || !elements) {
       return;
     }
+
     const pr = stripe.paymentRequest({
       currency: "usd",
       country: "US",
@@ -94,6 +108,7 @@ const Form = () => {
         amount: amount,
       },
     });
+
     pr.canMakePayment().then((result) => {
       if (result) {
         //show some button on the page
@@ -115,7 +130,8 @@ const Form = () => {
           }),
         }
       ).then((r) => r.json());
-
+      console.log(`e`, e.paymentMethod)
+      handlePaymentMethod(e.paymentMethod)
       if (backendError) {
         addMessage(backendError.message);
         return;
@@ -123,19 +139,28 @@ const Form = () => {
 
       addMessage("Client secret returned");
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment( clientSecret, {
+      const { error: stripeError, paymentIntent } =
+        await stripe.confirmCardPayment(
+          clientSecret,
+          {
             payment_method: e.paymentMethod.id,
-          }, { handleActions: false });
+          },
+          { handleActions: false }
+        );
 
       if (stripeError) {
         // Show error to customer (e.g., insufficient funds)
-        e.complete('fail');
+        e.complete("fail");
         addMessage(stripeError.message);
         return;
       }
 
       // Show a success message to customer
-      e.complete('success');
+      e.complete("success");
+      handlePaymentIntent(paymentIntent);
+            // addMessage(`Payment INTENT: ${ JSON.stringify(paymentIntent)}`);
+
+      console.log(`paymentIntent`, paymentIntent)
       addMessage(`Payment ${paymentIntent.status}: ${paymentIntent.id}`);
     });
   }, [stripe, elements, addMessage]);
@@ -221,7 +246,7 @@ const Form = () => {
               <button
                 id="p-one"
                 name="amount"
-                value={300}
+                value={800}
                 onClick={handleAmount}
                 className="s-box"
               >
@@ -233,7 +258,7 @@ const Form = () => {
               <button
                 id="p-two"
                 name="amount"
-                value={800}
+                value={300}
                 onClick={handleAmount}
                 className="s-box"
               >
@@ -335,24 +360,43 @@ const Form = () => {
           </button> */}
         </div>
       </div>
-      <div className="row">
-        <div className="p-console">
-          <StatusMessages messages={messages} />
-          <pre>
-            <li className="customer">name: {JSON.stringify(name)}</li>
-            <li className="customer">email: {JSON.stringify(email)}</li>
-            <li className="product">
-              description: {JSON.stringify(description)}
-            </li>
-            <li className="product">amount: {JSON.stringify(amount)}</li>
-          </pre>
-          <pre>
-            <li className="card">number: {JSON.stringify(number)}</li>
-            <li className="card">exp_month: {JSON.stringify(exp_month)}</li>
-            <li className="card">exp_year: {JSON.stringify(exp_year)}</li>
-            <li className="card">cvc: {JSON.stringify(cvc)}</li>
-            <li className="product">customer: {JSON.stringify(customer)}</li>
-          </pre>
+      <div className="console-container">
+          <div className="small-console">
+            <StatusMessages messages={messages} />
+          </div>
+        <div className="row">
+          <div className="p-console">
+            <pre className="p-console-side">
+              <li className="customer">name: {JSON.stringify(name)}</li>
+              <li className="customer">email: {JSON.stringify(email)}</li>
+              <li className="product">
+                description: {JSON.stringify(description)}
+              </li>
+              <li className="product">amount: {JSON.stringify(amount)}</li>
+            </pre>
+            <pre>
+              <li className="card">number: {JSON.stringify(number)}</li>
+              <li className="card">exp_month: {JSON.stringify(exp_month)}</li>
+              <li className="card">exp_year: {JSON.stringify(exp_year)}</li>
+              <li className="card">cvc: {JSON.stringify(cvc)}</li>
+              <h4>return</h4>
+              <li className="return">
+                customer_id: {JSON.stringify(customer)}
+              </li>
+              <li className="return">
+                payment_intent_id: {JSON.stringify(paymentIntent.id)}
+              </li>
+              <li className="return">
+                payment_method_id: {JSON.stringify(paymentMethod.id)}
+              </li>
+              <li className="return">
+                card_details: {JSON.stringify(paymentMethod.card)}
+              </li>
+              <li className="return">
+                charge_id: find in payement intent link above.
+              </li>
+            </pre>
+          </div>
         </div>
       </div>
     </div>

@@ -94,16 +94,16 @@ fieldset, input, select {
 }
 
 .main {
-  border: 3px solid red;
+  border: 3px solid #000000;
   display: flex;
   flex-direction: column;
-  height: 1050px;
+  height: 1450px;
   width: 800px;
   padding: 20px;
 }
 
 .row {
-  border: 3px solid #f300c6;
+  /* border: 3px solid #f300c6; */
   display: flex;
   flex-direction: row;
   justify-content: space-around;
@@ -112,7 +112,7 @@ fieldset, input, select {
 }
 
 .half {
-  border: 3px solid #f300c6;
+  /* border: 3px solid #f300c6; */
   padding: 20px;
   width: 50%
 }
@@ -127,12 +127,29 @@ fieldset, input, select {
 .p-console {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  position: relative;
+  /* justify-content: space-around; */
   height: 250px;
   width: 100%;
   background-color: #0A253C;
   color: #ffffff;
-  padding: 20px;
+  overflow-wrap: break-word;
+  /* margin-right: 30px; */
+  /* border: 3px solid #17cf17; */
+  top: 20px
+}
+
+.small-console {
+  display: flex;
+  flex-direction: row;
+  /* justify-content: space-around; */
+  height: 120px;
+  width: 100%;
+  background-color: #0A253C;
+  color: #ffffff;
+  padding: none;
+  margin: none;
+    /* border: 3px solid #ec400c; */
 }
 
 .customer {
@@ -141,6 +158,12 @@ fieldset, input, select {
 
 .product {
   color: orange;
+}
+
+.return {
+  color: red;
+  overflow-wrap: break-word;
+
 }
 
 .card {
@@ -160,6 +183,7 @@ fieldset, input, select {
 }
 
 .pay-button {
+  margin-top: 40px;
   padding: 8px;
   width: 90px;
 }
@@ -172,3 +196,11 @@ fieldset, input, select {
   padding: 10px;
 }
 
+.p-console-side {
+  margin-right: 40px;
+}
+
+/* .console-container {
+  display: flex;
+  felx-direction: column;
+} */

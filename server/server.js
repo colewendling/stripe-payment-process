@@ -178,6 +178,13 @@ app.post(
             `✅ [${event.id}] Customer:(${customer.id}) Created with default_source: (${customer.default_source})`
           );
         }
+
+         if (event.type === "paymentMethod.complete") {
+           const paymentMethod = event.data.object;
+           console.log(
+             `✅ [${paymentMethod.id}] paymentMethod_id:(${paymentMethod.id}) Created.`
+           );
+         }
     if (event.type === "payment_intent.requires_action") {
       const paymentIntent = event.data.object;
       console.log(
@@ -187,7 +194,7 @@ app.post(
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
       console.log(
-        `✅ [${event.id}] PaymentIntent:(${paymentIntent.id}) Status:${paymentIntent.status}`
+        `✅ [${event.id}] PaymentIntent:(${paymentIntent.id}) Status:${paymentIntent.status} ${paymentIntent}`
       );
     }
 
