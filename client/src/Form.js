@@ -5,7 +5,6 @@ import StatusMessages, { useMessages } from "./StatusMessages";
 import { CardElement, PaymentRequestButtonElement } from "@stripe/react-stripe-js";
 
 import "./Form.css";
-import { Card } from "material-ui";
 
 const Form = () => {
   const stripe = useStripe();
@@ -108,6 +107,8 @@ const Form = () => {
         amount: amount,
       },
     });
+    console.log(`paymentRequest`, pr);
+    addMessage("Doing a thing");
 
     pr.canMakePayment().then((result) => {
       if (result) {
@@ -117,6 +118,8 @@ const Form = () => {
     });
 
     pr.on("paymentmethod", async (e) => {
+      console.log(`e`, e.paymentMethod)
+      handlePaymentMethod(e.paymentMethod)
       const { error: backendError, clientSecret } = await fetch(
         "/create-payment-intent",
         {
@@ -127,11 +130,13 @@ const Form = () => {
           body: JSON.stringify({
             paymentMethodType: "card",
             currency: "usd",
+            amount: amount,
+            customerEmail: e.paymentMethod.billing_details.email,
+            customerName: e.paymentMethod.billing_details.name,
+            paymentMethodId: e.paymentMethod.id
           }),
         }
       ).then((r) => r.json());
-      console.log(`e`, e.paymentMethod)
-      handlePaymentMethod(e.paymentMethod)
       if (backendError) {
         addMessage(backendError.message);
         return;
@@ -144,6 +149,7 @@ const Form = () => {
           clientSecret,
           {
             payment_method: e.paymentMethod.id,
+            setup_future_usage: "off_session"
           },
           { handleActions: false }
         );
@@ -227,7 +233,7 @@ const Form = () => {
          cvc: cvc,
        }),
      }).then((r) => r.json());
-     console.log(customerObject)
+     console.log("customer: " + customerObject)
      handleCustomerObject(customerObject.id)
    }
   

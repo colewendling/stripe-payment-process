@@ -23,14 +23,28 @@ app.use((req, res, next) => {
 // curl -X POST http://localhost:4242/create-payment-intent -H "Content-Type: application/json" -d '{"paymentMethodType":"ideal", "currency":"eur"}'
 
 app.post("/create-payment-intent", async (req, res) => {
-  const { paymentMethodType, currency } = req.body;
+  const { paymentMethodType, currency, amount, customerEmail, customerName, paymentMethodId } = req.body;
 
+  var customer = null;
+  try {
+    customer = await stripe.customers.create({
+      name: customerName,
+      email: customerEmail,
+    });
+  } catch (e) {
+    res.status(400).json({ error: { message: e.message } });
+  }
+  console.log(`CUSTOMER: `, customer);
+  console.log('Creating PI for PM: ', paymentMethodId);
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1999,
+      amount: amount,
       currency: currency,
-      payment_method_types: [paymentMethodType],
+      payment_method: paymentMethodId,
+      customer: customer.id,
+      setup_future_usage: "off_session"
     });
+    console.log(`PAYMENT INTENT: `, paymentIntent);
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (e) {
     res.status(400).json({ error: { message: e.message } });
@@ -70,7 +84,7 @@ app.post("/payment-sheet", async (req, res) => {
     source: token.id,
   });
   // console.log(`paymentMethod: `, paymentMethod);
-  console.log(`CUSTOMER: `, customer);
+  //console.log(`CUSTOMER: `, customer);
   // console.log(`customer_id: `, customer.id)
 
   // const attachedPaymentMethod = await stripe.paymentMethods.attach(
