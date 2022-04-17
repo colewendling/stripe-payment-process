@@ -5,6 +5,10 @@ const bodyParser = require("body-parser");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { resolve } = require("path");
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+// import { OrderContext } from "./OrderContext";
+// const orderCtx = useContext(OrderContext);
+// const paymentIntent = orderCtx.paymentIntent;
+// const setPaymentMethod = orderCtx.setPaymentMethod;
 
 //middleware
 app.use(express.static(process.env.STATIC_DIR));
@@ -23,13 +27,14 @@ app.use((req, res, next) => {
 // curl -X POST http://localhost:4242/create-payment-intent -H "Content-Type: application/json" -d '{"paymentMethodType":"ideal", "currency":"eur"}'
 
 app.post("/create-payment-intent", async (req, res) => {
-  const { paymentMethodType, currency, amount, customerEmail, customerName, paymentMethodId } = req.body;
-
-  var customer = null;
+  const {currency, amount, customerEmail, customerName, customerPhone, paymentMethodId, card } = req.body;
+  let customer = null;
+  console.log(`req.body`, req.body)
   try {
     customer = await stripe.customers.create({
       name: customerName,
       email: customerEmail,
+      phone: customerPhone,
     });
   } catch (e) {
     res.status(400).json({ error: { message: e.message } });
@@ -40,8 +45,8 @@ app.post("/create-payment-intent", async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: currency,
-      payment_method: paymentMethodId,
       customer: customer.id,
+      payment_method: paymentMethodId,
       setup_future_usage: "off_session"
     });
     console.log(`PAYMENT INTENT: `, paymentIntent);
@@ -118,6 +123,7 @@ app.post("/create-customer", async (req, res) => {
     const customer = await stripe.customers.create({
       name: name,
       email: email,
+ 
     });
     res.send(customer);
   } catch (e) {

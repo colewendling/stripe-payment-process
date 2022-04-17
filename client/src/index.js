@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import App from './App'
 import {Elements} from '@stripe/react-stripe-js'
 import {loadStripe} from '@stripe/stripe-js'
-import './Form.css'
 
 (async () => {
   const {publishableKey} = await fetch('/config').then(r => r.json())
